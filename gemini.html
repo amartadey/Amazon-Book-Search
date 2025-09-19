@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon.in Book Search Generator</title>
+    <!-- Tailwind CSS CDN for minimalistic and responsive design -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for better aesthetics on certain elements */
+        .copy-btn {
+            @apply bg-gray-200 text-gray-800 transition-colors duration-200 ease-in-out;
+        }
+        .copy-btn:hover {
+            @apply bg-gray-300;
+        }
+        .ai-loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen py-8 px-4 sm:px-6 lg:px-8">
+    <!-- Main container now takes up the full width and centers the content -->
+    <div class="w-full max-w-7xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden h-full">
+        <!-- Header Section -->
+        <div class="bg-gray-800 p-8 text-white text-center rounded-t-2xl">
+            <h1 class="text-3xl font-bold mb-2">
+                <span class="inline-block align-middle mr-2">📚</span> Amazon.in Book Search Generator
+            </h1>
+            <p class="text-sm text-gray-400">
+                Create custom search URLs with advanced filters for Amazon.in books.
+            </p>
+        </div>
+
+        <!-- Main Content Section -->
+        <div class="p-6 sm:p-10">
+            <form id="searchForm" class="space-y-6">
+                <!-- Main Filters Section -->
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Keywords and Sorting - Collapsible -->
+                    <div x-data="{ open: true }" class="bg-gray-50 rounded-xl p-6 shadow-sm border border-gray-200">
+                        <button type="button" @click="open = !open" class="w-full flex justify-between items-center text-lg font-semibold text-gray-800 mb-4">
+                            <h3 class="flex items-center">
+                                <span class="inline-block align-middle mr-2">🔍</span> Basic Search
+                            </h3>
+                            <svg class="h-5 w-5 transition-transform duration-200" :class="{ 'transform rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="open" x-collapse.duration.300ms class="space-y-4">
+                            <div>
+                                <label for="keywords" class="block text-sm font-medium text-gray-700">Keywords / Book Title</label>
+                                <input type="text" id="keywords" placeholder="Enter book title or keywords" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                            </div>
+                            <div>
+                                <label for="author" class="block text-sm font-medium text-gray-700">Author</label>
+                                <input type="text" id="author" placeholder="Author name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                            </div>
+                            <div>
+                                <label for="sortBy" class="block text-sm font-medium text-gray-700">Sort By</label>
+                                <select id="sortBy" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                                    <option value="">Relevance</option>
+                                    <option value="price-asc-rank">Price: Low to High</option>
+                                    <option value="price-desc-rank">Price: High to Low</option>
+                                    <option value="review-rank">Customer Reviews</option>
+                                    <option value="date-desc-rank">Newest First</option>
+                                    <option value="salesrank">Bestsellers</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Book Details & Publication - Collapsible -->
+                    <div x-data="{ open: true }" class="bg-gray-50 rounded-xl p-6 shadow-sm border border-gray-200">
+                        <button type="button" @click="open = !open" class="w-full flex justify-between items-center text-lg font-semibold text-gray-800 mb-4">
+                            <h3 class="flex items-center">
+                                <span class="inline-block align-middle mr-2">📖</span> Book Details
+                            </h3>
+                            <svg class="h-5 w-5 transition-transform duration-200" :class="{ 'transform rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="open" x-collapse.duration.300ms class="space-y-4">
+                            <div>
+                                <label for="language" class="block text-sm font-medium text-gray-700">Language</label>
+                                <select id="language" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                                    <option value="">All Languages</option>
+                                    <option value="english">English</option>
+                                    <option value="hindi">Hindi</option>
+                                    <option value="tamil">Tamil</option>
+                                    <option value="telugu">Telugu</option>
+                                    <option value="bengali">Bengali</option>
+                                    <option value="marathi">Marathi</option>
+                                    <option value="gujarati">Gujarati</option>
+                                    <option value="kannada">Kannada</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="publisher" class="block text-sm font-medium text-gray-700">Publisher</label>
+                                <input type="text" id="publisher" placeholder="Publisher name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                            </div>
+                            <div>
+                                <label for="publicationYear" class="block text-sm font-medium text-gray-700">Publication Year</label>
+                                <input type="number" id="publicationYear" placeholder="e.g. 2023" min="1900" max="2100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                            </div>
+                            <!-- New Feature: Page Count Filter -->
+                            <div>
+                                <label for="pageCount" class="block text-sm font-medium text-gray-700">Page Count</label>
+                                <select id="pageCount" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                                    <option value="">Any Page Count</option>
+                                    <option value="0-50">0-50 pages</option>
+                                    <option value="51-100">51-100 pages</option>
+                                    <option value="101-200">101-200 pages</option>
+                                    <option value="201-300">201-300 pages</option>
+                                    <option value="301-400">301-400 pages</option>
+                                    <option value="401-500">401-500 pages</option>
+                                    <option value="501-600">501-600 pages</option>
+                                    <option value="601-700">601-700 pages</option>
+                                    <option value="701-800">701-800 pages</option>
+                                    <option value="801-900">801-900 pages</option>
+                                    <option value="901-1000">901-1000 pages</option>
+                                    <option value="1001+">1001+ pages</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Condition and Shipping - Collapsible -->
+                    <div x-data="{ open: true }" class="bg-gray-50 rounded-xl p-6 shadow-sm border border-gray-200">
+                        <button type="button" @click="open = !open" class="w-full flex justify-between items-center text-lg font-semibold text-gray-800 mb-4">
+                            <h3 class="flex items-center">
+                                <span class="inline-block align-middle mr-2">📦</span> Condition & Shipping
+                            </h3>
+                            <svg class="h-5 w-5 transition-transform duration-200" :class="{ 'transform rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                        <div x-show="open" x-collapse.duration.300ms class="space-y-4">
+                            <div>
+                                <label for="condition" class="block text-sm font-medium text-gray-700">Book Condition</label>
+                                <select id="condition" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                                    <option value="">New & Used</option>
+                                    <option value="new">New Books</option>
+                                    <option value="used">Used Books</option>
+                                </select>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="primeEligible" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="primeEligible" class="text-sm font-medium text-gray-700">Prime Eligible</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="freeShipping" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="freeShipping" class="text-sm font-medium text-gray-700">Free Shipping</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="dealsOnly" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="dealsOnly" class="text-sm font-medium text-gray-700">Only Deals</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="last90Days" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="last90Days" class="text-sm font-medium text-gray-700">New Releases (Last 90 days)</label>
+                            </div>
+                            <!-- New Feature: Kindle Unlimited Filter -->
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="kindleUnlimited" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="kindleUnlimited" class="text-sm font-medium text-gray-700">Kindle Unlimited</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Price and Ratings Section - Collapsible -->
+                <div x-data="{ open: true }" class="bg-gray-50 rounded-xl p-6 shadow-sm border border-gray-200 mt-6">
+                    <button type="button" @click="open = !open" class="w-full flex justify-between items-center text-lg font-semibold text-gray-800 mb-4">
+                        <h3 class="flex items-center">
+                            <span class="inline-block align-middle mr-2">💰⭐</span> Price & Ratings
+                        </h3>
+                        <svg class="h-5 w-5 transition-transform duration-200" :class="{ 'transform rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" x-collapse.duration.300ms class="space-y-4">
+                        <!-- Price Range -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Price Range</label>
+                            <div class="flex items-center space-x-2 mt-1">
+                                <input type="number" id="minPrice" placeholder="Min ₹" class="flex-1 rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                                <span class="text-gray-500">to</span>
+                                <input type="number" id="maxPrice" placeholder="Max ₹" class="flex-1 rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                            </div>
+                        </div>
+
+                        <!-- Ratings -->
+                        <div>
+                            <label for="minRating" class="block text-sm font-medium text-gray-700">Minimum Rating</label>
+                            <select id="minRating" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200">
+                                <option value="">Any Rating</option>
+                                <option value="4">4★ & Above</option>
+                                <option value="3">3★ & Above</option>
+                                <option value="2">2★ & Above</option>
+                                <option value="1">1★ & Above</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Checkboxes - Collapsible Section -->
+                <div x-data="{ open: true }" class="bg-gray-50 rounded-xl shadow-sm border border-gray-200">
+                    <button type="button" @click="open = !open" class="w-full p-6 flex justify-between items-center text-lg font-semibold text-gray-800">
+                        <h3 class="flex items-center">
+                            <span class="inline-block align-middle mr-2">📚</span> Book Categories
+                        </h3>
+                        <svg class="h-5 w-5 transition-transform duration-200" :class="{ 'transform rotate-180': open }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div x-show="open" x-collapse.duration.300ms class="px-6 pb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- All category checkboxes -->
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="fiction" name="category" value="1318073031" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="fiction" class="text-sm text-gray-700">Fiction</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="nonfiction" name="category" value="1318074031" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="nonfiction" class="text-sm text-gray-700">Non-Fiction</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="textbooks" name="category" value="1318075031" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="textbooks" class="text-sm text-gray-700">Textbooks</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="business" name="category" value="1318068031" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="business" class="text-sm text-gray-700">Business & Economics</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="selfhelp" name="category" value="1318076031" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="selfhelp" class="text-sm text-gray-700">Self-Help</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="biography" name="category" value="1318077031" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="biography" class="text-sm text-gray-700">Biography</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="history" name="category" value="1318078031" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="history" class="text-sm text-gray-700">History</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="science" name="category" value="1318079031" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="science" class="text-sm text-gray-700">Science & Technology</label>
+                            </div>
+                            <!-- New Categories Added -->
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="comics" name="category" value="1318080031" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="comics" class="text-sm text-gray-700">Comics & Graphic Novels</label>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="checkbox" id="children" name="category" value="1318081031" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <label for="children" class="text-sm text-gray-700">Children's Books</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-4 mt-8">
+                    <button type="submit" class="w-full sm:w-auto flex-1 bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 transition-all duration-200">
+                        Generate Search URL
+                    </button>
+                    <button type="button" id="clearBtn" class="w-full sm:w-auto flex-1 bg-gray-200 text-gray-800 font-bold py-3 px-6 rounded-lg shadow-md hover:bg-gray-300 transition-all duration-200">
+                        Clear All
+                    </button>
+                </div>
+            </form>
+
+            <!-- Result Section -->
+            <div id="resultSection" class="hidden mt-8 p-6 sm:p-8 bg-gray-800 rounded-xl text-white">
+                <h3 class="text-xl font-bold mb-4">🎯 Generated Amazon Search URL</h3>
+                <div id="urlDisplay" class="bg-gray-700 p-4 rounded-lg break-all text-sm font-mono overflow-auto mb-4"></div>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button id="copyBtn" class="flex-1 w-full sm:w-auto py-2 px-4 rounded-lg font-semibold transition-colors duration-200 bg-gray-600 hover:bg-gray-500">
+                        <span class="mr-1">📋</span> Copy URL
+                    </button>
+                    <a href="#" id="openAmazon" class="flex-1 w-full sm:w-auto py-2 px-4 rounded-lg font-semibold text-center transition-colors duration-200 bg-indigo-600 hover:bg-indigo-700" target="_blank" rel="noopener noreferrer">
+                        <span class="mr-1">🛒</span> Open in New Tab
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Gemini AI Features Section -->
+            <div class="mt-8 p-6 sm:p-8 bg-gray-800 rounded-xl text-white">
+                <h3 class="text-xl font-bold mb-4">✨ Gemini AI Features</h3>
+                
+                <div class="flex flex-col sm:flex-row items-center gap-4">
+                    <div class="flex-grow w-full">
+                        <input type="text" id="aiBookTitle" placeholder="Enter a book title for a summary..." class="w-full rounded-md border-gray-300 shadow-sm p-2 text-gray-900 focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <div class="flex-shrink-0 flex gap-2 w-full sm:w-auto">
+                        <button type="button" id="generateSynopsisBtn" class="flex-1 bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 transition-all duration-200 flex items-center justify-center">
+                            <span id="synopsisBtnText">✨ Get Synopsis</span>
+                            <div id="synopsisSpinner" class="hidden ai-loading-spinner ml-2"></div>
+                        </button>
+                        <button type="button" id="generateCoverBtn" class="flex-1 bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700 transition-all duration-200 flex items-center justify-center">
+                            <span id="coverBtnText">✨ Get Book Cover</span>
+                            <div id="coverSpinner" class="hidden ai-loading-spinner ml-2"></div>
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="aiResultSection" class="hidden mt-4 bg-gray-700 p-4 rounded-lg">
+                    <h4 class="text-lg font-semibold mb-2">Synopsis:</h4>
+                    <p id="synopsisOutput" class="text-sm text-gray-300 mb-4"></p>
+                    <div class="flex items-center gap-4">
+                        <button type="button" id="speakSynopsisBtn" class="bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-gray-500 transition-colors duration-200">
+                            <span id="speakBtnText">🔊 Read Aloud</span>
+                            <div id="audioSpinner" class="hidden ai-loading-spinner ml-2"></div>
+                        </button>
+                    </div>
+                    
+                    <h4 class="text-lg font-semibold mt-4 mb-2">Generated Book Cover:</h4>
+                    <div id="coverOutput" class="flex justify-center items-center min-h-[300px] bg-gray-800 rounded-lg overflow-hidden">
+                        <p class="text-gray-400 text-sm">Your book cover will appear here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alpine.js for the collapsible category section -->
+    <script src="//unpkg.com/alpinejs" defer></script>
+    
+    <script>
+        // Check for clipboard API support
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                return navigator.clipboard.writeText(text);
+            } else {
+                // Fallback for older browsers or restricted environments
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    return Promise.resolve();
+                } catch (err) {
+                    console.error('Copy command failed:', err);
+                    return Promise.reject(err);
+                }
+            }
+        }
+
+        // Base64 to ArrayBuffer for audio
+        function base64ToArrayBuffer(base64) {
+            const binary_string = window.atob(base64);
+            const len = binary_string.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binary_string.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        // PCM to WAV conversion for audio playback
+        function pcmToWav(pcmData, sampleRate) {
+            const pcm16 = new Int16Array(pcmData);
+            const buffer = new ArrayBuffer(44 + pcm16.length * 2);
+            const view = new DataView(buffer);
+            
+            // WAV header
+            writeString(view, 0, 'RIFF'); // RIFF identifier
+            view.setUint32(4, 36 + pcm16.length * 2, true); // file size
+            writeString(view, 8, 'WAVE'); // 'WAVE' format
+            writeString(view, 12, 'fmt '); // 'fmt ' chunk
+            view.setUint32(16, 16, true); // chunk size
+            view.setUint16(20, 1, true); // audio format (1 = PCM)
+            view.setUint16(22, 1, true); // number of channels
+            view.setUint32(24, sampleRate, true); // sample rate
+            view.setUint32(28, sampleRate * 2, true); // byte rate
+            view.setUint16(32, 2, true); // block align
+            view.setUint16(34, 16, true); // bits per sample
+            writeString(view, 36, 'data'); // 'data' chunk
+            view.setUint32(40, pcm16.length * 2, true); // data size
+
+            // Write PCM data
+            let offset = 44;
+            for (let i = 0; i < pcm16.length; i++, offset += 2) {
+                view.setInt16(offset, pcm16[i], true);
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+
+            function writeString(view, offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+        }
+    
+        class AmazonSearchGenerator {
+            constructor() {
+                // Constants
+                this.BASE_URL = 'https://www.amazon.in/s';
+                this.AFFILIATE_TAG = 'learncomput08-21';
+                this.BOOK_DEPARTMENT = 'stripbooks';
+                
+                // DOM elements
+                this.form = document.getElementById('searchForm');
+                this.resultSection = document.getElementById('resultSection');
+                this.urlDisplay = document.getElementById('urlDisplay');
+                this.openAmazonBtn = document.getElementById('openAmazon');
+                this.copyBtn = document.getElementById('copyBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                
+                this.aiBookTitleInput = document.getElementById('aiBookTitle');
+                this.generateSynopsisBtn = document.getElementById('generateSynopsisBtn');
+                this.generateCoverBtn = document.getElementById('generateCoverBtn');
+                this.speakSynopsisBtn = document.getElementById('speakSynopsisBtn');
+                this.synopsisOutput = document.getElementById('synopsisOutput');
+                this.coverOutput = document.getElementById('coverOutput');
+                this.aiResultSection = document.getElementById('aiResultSection');
+                
+                this.synopsisBtnText = document.getElementById('synopsisBtnText');
+                this.synopsisSpinner = document.getElementById('synopsisSpinner');
+                this.coverBtnText = document.getElementById('coverBtnText');
+                this.coverSpinner = document.getElementById('coverSpinner');
+                this.speakBtnText = document.getElementById('speakBtnText');
+                this.audioSpinner = document.getElementById('audioSpinner');
+                
+                this.audio = new Audio();
+                
+                this.initEventListeners();
+            }
+            
+            initEventListeners() {
+                this.form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.generateUrl();
+                });
+                
+                this.clearBtn.addEventListener('click', () => {
+                    this.clearForm();
+                });
+                
+                this.copyBtn.addEventListener('click', () => {
+                    this.copyUrl();
+                });
+                
+                this.generateSynopsisBtn.addEventListener('click', () => {
+                    this.generateSynopsis();
+                });
+                
+                this.generateCoverBtn.addEventListener('click', () => {
+                    this.generateBookCover();
+                });
+                
+                this.speakSynopsisBtn.addEventListener('click', () => {
+                    this.speakSynopsis();
+                });
+            }
+            
+            generateUrl() {
+                const params = new URLSearchParams();
+                
+                // Get all form values
+                const keywords = document.getElementById('keywords').value.trim();
+                const author = document.getElementById('author').value.trim();
+                const sortBy = document.getElementById('sortBy').value;
+                const language = document.getElementById('language').value;
+                const publisher = document.getElementById('publisher').value.trim();
+                const publicationYear = document.getElementById('publicationYear').value;
+                const pageCount = document.getElementById('pageCount').value;
+                const minPrice = document.getElementById('minPrice').value;
+                const maxPrice = document.getElementById('maxPrice').value;
+                const minRating = document.getElementById('minRating').value;
+                const condition = document.getElementById('condition').value;
+                const primeEligible = document.getElementById('primeEligible').checked;
+                const freeShipping = document.getElementById('freeShipping').checked;
+                const dealsOnly = document.getElementById('dealsOnly').checked;
+                const last90Days = document.getElementById('last90Days').checked;
+                const kindleUnlimited = document.getElementById('kindleUnlimited').checked;
+
+                // Build search query (keywords, author, publisher)
+                let searchTerms = [];
+                if (keywords) searchTerms.push(keywords);
+                if (author) searchTerms.push(`by-${author}`);
+                if (publisher) searchTerms.push(`pub-${publisher}`);
+                
+                if (searchTerms.length > 0) {
+                    params.append('k', searchTerms.join(' '));
+                }
+                
+                // Set the default book department
+                params.append('i', this.BOOK_DEPARTMENT);
+                
+                // Handle complex filters using 'rh' parameter
+                const rhFilters = [];
+                
+                // Add categories (multi-select)
+                const categoryInputs = document.querySelectorAll('input[name="category"]:checked');
+                const categories = Array.from(categoryInputs).map(input => input.value);
+                if (categories.length > 0) {
+                    rhFilters.push(`n:${categories.join(',n:')}`);
+                }
+                
+                // Add price range filter
+                if (minPrice || maxPrice) {
+                    let priceFilter = 'p_36:';
+                    if (minPrice && maxPrice) {
+                        priceFilter += `${minPrice * 100}-${maxPrice * 100}`;
+                    } else if (minPrice) {
+                        priceFilter += `${minPrice * 100}-`;
+                    } else if (maxPrice) {
+                        priceFilter += `-${maxPrice * 100}`;
+                    }
+                    rhFilters.push(priceFilter);
+                }
+                
+                // Add language filter
+                if (language) {
+                    const languageMap = {
+                        'english': 'p_n_feature_nine_browse-bin:3291437031',
+                        'hindi': 'p_n_feature_nine_browse-bin:3291438031',
+                        'tamil': 'p_n_feature_nine_browse-bin:3291439031',
+                        'telugu': 'p_n_feature_nine_browse-bin:3291440031',
+                        'bengali': 'p_n_feature_nine_browse-bin:3291441031',
+                        'marathi': 'p_n_feature_nine_browse-bin:3291442031',
+                        'gujarati': 'p_n_feature_nine_browse-bin:3291443031',
+                        'kannada': 'p_n_feature_nine_browse-bin:3291444031'
+                    };
+                    if (languageMap[language]) {
+                        rhFilters.push(languageMap[language]);
+                    }
+                }
+                
+                // Add rating filter
+                if (minRating) {
+                    const ratingFilter = `p_72:${minRating}star`;
+                    rhFilters.push(ratingFilter);
+                }
+                
+                // Add publication year filter
+                if (publicationYear) {
+                    const yearFilter = `p_n_publication_date:${publicationYear}`;
+                    rhFilters.push(yearFilter);
+                }
+
+                // Add page count filter
+                if (pageCount) {
+                    const pageCountMap = {
+                        '0-50': 'p_n_feature_browse-bin:1318256031',
+                        '51-100': 'p_n_feature_browse-bin:1318257031',
+                        '101-200': 'p_n_feature_browse-bin:1318258031',
+                        '201-300': 'p_n_feature_browse-bin:1318259031',
+                        '301-400': 'p_n_feature_browse-bin:1318260031',
+                        '401-500': 'p_n_feature_browse-bin:1318261031',
+                        '501-600': 'p_n_feature_browse-bin:1318262031',
+                        '601-700': 'p_n_feature_browse-bin:1318263031',
+                        '701-800': 'p_n_feature_browse-bin:1318264031',
+                        '801-900': 'p_n_feature_browse-bin:1318265031',
+                        '901-1000': 'p_n_feature_browse-bin:1318266031',
+                        '1001+': 'p_n_feature_browse-bin:1318267031',
+                    };
+                    if (pageCountMap[pageCount]) {
+                        rhFilters.push(pageCountMap[pageCount]);
+                    }
+                }
+
+                // Add book condition filter (New vs. Used)
+                if (condition === 'new') {
+                    rhFilters.push('p_n_condition-type:1276229031');
+                } else if (condition === 'used') {
+                    rhFilters.push('p_n_condition-type:1276229031');
+                }
+
+                // Add Prime Eligible filter
+                if (primeEligible) {
+                    rhFilters.push('p_85:2470955031');
+                }
+
+                // Add Free Shipping filter
+                if (freeShipping) {
+                    rhFilters.push('p_76:419121031');
+                }
+
+                // Add Deals Only filter (a bit tricky, but this parameter works)
+                if (dealsOnly) {
+                    rhFilters.push('p_n_deal_type:28373738011');
+                }
+
+                // Add Last 90 Days filter
+                if (last90Days) {
+                    rhFilters.push('p_n_date:1276229031');
+                }
+
+                // Add Kindle Unlimited filter
+                if (kindleUnlimited) {
+                    rhFilters.push('p_85:2470955031');
+                }
+
+                // Combine all 'rh' filters
+                if (rhFilters.length > 0) {
+                    // Amazon requires 'n:976390031' (the book department) as the first 'rh' value for many filters
+                    params.append('rh', `n:976390031,${rhFilters.join(',')}`);
+                }
+
+                // Add sorting parameter
+                if (sortBy) {
+                    params.append('s', sortBy);
+                }
+                
+                // Add affiliate tag at the end
+                params.append('tag', this.AFFILIATE_TAG);
+                
+                // Construct the final URL
+                const finalUrl = `${this.BASE_URL}?${params.toString()}`;
+                
+                this.displayResult(finalUrl);
+            }
+            
+            displayResult(url) {
+                this.urlDisplay.textContent = url;
+                this.openAmazonBtn.href = url;
+                this.resultSection.classList.remove('hidden');
+                
+                // Scroll to the result section for better UX
+                this.resultSection.scrollIntoView({ behavior: 'smooth' });
+            }
+            
+            copyUrl() {
+                const url = this.urlDisplay.textContent;
+                copyToClipboard(url)
+                    .then(() => {
+                        this.copyBtn.textContent = '✅ Copied!';
+                        setTimeout(() => this.copyBtn.textContent = '📋 Copy URL', 2000);
+                    })
+                    .catch(() => {
+                        this.copyBtn.textContent = '❌ Failed!';
+                        setTimeout(() => this.copyBtn.textContent = '📋 Copy URL', 2000);
+                    });
+            }
+            
+            clearForm() {
+                this.form.reset();
+                this.resultSection.classList.add('hidden');
+            }
+            
+            // --- Gemini API Functions ---
+            async generateSynopsis() {
+                const title = this.aiBookTitleInput.value.trim();
+                if (!title) {
+                    this.synopsisOutput.textContent = 'Please enter a book title.';
+                    return;
+                }
+                
+                this.synopsisBtnText.textContent = '';
+                this.synopsisSpinner.classList.remove('hidden');
+                this.aiResultSection.classList.remove('hidden');
+                this.synopsisOutput.textContent = 'Generating synopsis...';
+                
+                const prompt = `Write a short, engaging summary or synopsis for the book "${title}". The summary should be concise and around 3-4 sentences. Focus on the main plot and key themes.`;
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                };
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    
+                    const result = await response.json();
+                    const synopsisText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+                    this.synopsisOutput.textContent = synopsisText || 'Could not generate a synopsis for this title.';
+                } catch (error) {
+                    console.error("Error generating synopsis:", error);
+                    this.synopsisOutput.textContent = 'Error generating synopsis. Please try again.';
+                } finally {
+                    this.synopsisBtnText.textContent = '✨ Get Synopsis';
+                    this.synopsisSpinner.classList.add('hidden');
+                }
+            }
+            
+            async generateBookCover() {
+                const title = this.aiBookTitleInput.value.trim();
+                if (!title) {
+                    this.coverOutput.innerHTML = '<p class="text-gray-400 text-sm">Please enter a book title to generate a cover.</p>';
+                    return;
+                }
+                
+                this.coverBtnText.textContent = '';
+                this.coverSpinner.classList.remove('hidden');
+                this.aiResultSection.classList.remove('hidden');
+                this.coverOutput.innerHTML = '<p class="text-gray-400 text-sm">Generating book cover...</p>';
+                
+                const prompt = `A modern, visually appealing book cover design for a book titled "${title}". The style should be abstract and minimalist, using a limited color palette.`;
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+                
+                const payload = {
+                    instances: {
+                        prompt: prompt
+                    },
+                    parameters: {
+                        sampleCount: 1
+                    }
+                };
+
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    
+                    const result = await response.json();
+                    const base64Data = result?.predictions?.[0]?.bytesBase64Encoded;
+                    
+                    if (base64Data) {
+                        const imageUrl = `data:image/png;base64,${base64Data}`;
+                        this.coverOutput.innerHTML = `<img src="${imageUrl}" alt="Book cover for '${title}'" class="max-h-[300px] w-auto mx-auto rounded-lg shadow-md">`;
+                    } else {
+                        this.coverOutput.innerHTML = '<p class="text-gray-400 text-sm">Could not generate a book cover. Please try again.</p>';
+                    }
+                } catch (error) {
+                    console.error("Error generating book cover:", error);
+                    this.coverOutput.innerHTML = '<p class="text-gray-400 text-sm">Error generating book cover. Please try again.</p>';
+                } finally {
+                    this.coverBtnText.textContent = '✨ Get Book Cover';
+                    this.coverSpinner.classList.add('hidden');
+                }
+            }
+            
+            async speakSynopsis() {
+                const text = this.synopsisOutput.textContent;
+                if (!text || text === 'Generating synopsis...' || text === 'Error generating synopsis. Please try again.') {
+                    return;
+                }
+                
+                this.speakBtnText.textContent = '';
+                this.audioSpinner.classList.remove('hidden');
+                
+                const prompt = `Say in a calm, informative voice: ${text}`;
+                const apiKey = "";
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+                
+                const payload = {
+                    contents: [{
+                        parts: [{
+                            text: prompt
+                        }]
+                    }],
+                    generationConfig: {
+                        responseModalities: ["AUDIO"],
+                        speechConfig: {
+                            voiceConfig: {
+                                prebuiltVoiceConfig: { voiceName: "Rasalgethi" }
+                            }
+                        }
+                    },
+                };
+                
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) throw new Error(`API error: ${response.statusText}`);
+                    
+                    const result = await response.json();
+                    const part = result?.candidates?.[0]?.content?.parts?.[0];
+                    const audioData = part?.inlineData?.data;
+                    const mimeType = part?.inlineData?.mimeType;
+
+                    if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                        const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10);
+                        const pcmData = base64ToArrayBuffer(audioData);
+                        const pcm16 = new Int16Array(pcmData);
+                        const wavBlob = pcmToWav(pcm16, sampleRate);
+                        const audioUrl = URL.createObjectURL(wavBlob);
+                        this.audio.src = audioUrl;
+                        this.audio.play();
+                    } else {
+                        throw new Error('No audio data received.');
+                    }
+                } catch (error) {
+                    console.error("Error generating audio:", error);
+                } finally {
+                    this.speakBtnText.textContent = '🔊 Read Aloud';
+                    this.audioSpinner.classList.add('hidden');
+                }
+            }
+        }
+        
+        // Initialize the app when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new AmazonSearchGenerator();
+        });
+    </script>
+</body>
+</html>
